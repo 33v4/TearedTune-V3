@@ -24,8 +24,28 @@ jobs:
       - name: Check out source
         uses: actions/checkout@v7
 
-      - name: Configure Release build
-        run: cmake -S . -B build -G "Visual Studio 17 2022" -A x64
+      - name: Find project and configure Release build
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $checkoutRoot = $PWD.Path
+          $projectDir = $checkoutRoot
+          $rootCmake = Join-Path $projectDir 'CMakeLists.txt'
+
+          if (-not (Test-Path -LiteralPath $rootCmake -PathType Leaf)) {
+            $cmakeFile = Get-ChildItem -LiteralPath $checkoutRoot -Recurse -File -Filter 'CMakeLists.txt' |
+              Where-Object { $_.FullName -notmatch '[\\/](\.git|build|dist|_deps)[\\/]' } |
+              Select-Object -First 1
+            if (-not $cmakeFile) {
+              Get-ChildItem -LiteralPath $checkoutRoot -Force | Select-Object Name, Mode
+              throw 'No CMakeLists.txt was found in the checked-out repository.'
+            }
+            $projectDir = $cmakeFile.Directory.FullName
+          }
+
+          "Using project source: $projectDir"
+          "PROJECT_DIR=$projectDir" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          cmake -S "$projectDir" -B "$checkoutRoot/build" -G "Visual Studio 17 2022" -A x64
 
       - name: Build VST3
         run: cmake --build build --config Release --target TearedTune_VST3 --parallel
@@ -41,7 +61,7 @@ jobs:
             throw 'Could not find the Release TearedTune V3.vst3 bundle after the build.'
           }
 
-          $installReadme = 'installer/README_INSTALL.txt'
+          $installReadme = Join-Path $env:PROJECT_DIR 'installer/README_INSTALL.txt'
           if (-not (Test-Path -LiteralPath $installReadme -PathType Leaf)) {
             throw "Required install guide was not found: $installReadme"
           }
