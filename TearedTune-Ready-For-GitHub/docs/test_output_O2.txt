@@ -1,0 +1,40 @@
+
+== 1. Pitch detector accuracy (voice-like signal) ==
+[PASS] detector                   42 tones 82-880 Hz, worst error 1.00 cents, failures 0
+
+== 2. Snap to note ==
+[PASS] snap A4                    input -40 cents -> output 440.31 Hz (+1.20 cents)
+[PASS] snap A4                    input -20 cents -> output 440.20 Hz (+0.77 cents)
+[PASS] snap A4                    input +30 cents -> output 439.84 Hz (-0.61 cents)
+[PASS] snap A4                    input +45 cents -> output 439.94 Hz (-0.24 cents)
+[PASS] C major scale              Eb4 input -> 329.64 Hz (nearest scale note error 0.0 cents)
+
+== 3. Retune speed (A4 +50 cents -> 440 Hz) ==
+[PASS] retune time                retune 0 ms: within 10 cents after 110 ms (limit 180 ms)
+[PASS] retune time                retune 100 ms: within 10 cents after 250 ms (limit 440 ms)
+[PASS] retune time                retune 300 ms: within 10 cents after 563 ms (limit 960 ms)
+
+== 4. Amount / bypass ==
+[PASS] amount 0                   output stays at +39.9 cents (expected +40)
+[PASS] amount 50%                 output +20.8 cents (expected about +20)
+[PASS] bypass                     pitch untouched (+39.9 cents)
+
+== 5. Vibrato preservation (+/-40 cents @ 5.5 Hz around A4) ==
+[PASS] vibrato 0 flattens         instant retune: residual depth 11.6 cents vs 40.0 with vibrato=1 (input 40)
+[PASS] vibrato 1 keeps            depth 40.0 cents, centre -0.2 cents (input 40, centre 0)
+
+== 6. Artefacts (pure 440 Hz sine, -30 cents, corrected to A4) ==
+[PASS] sine purity                energy outside the tone = -56.2 dB relative
+
+== 7. Unvoiced material passes through ==
+[PASS] white noise                level change -0.63 dB
+[PASS] silence                    max output on digital silence = 0.00e+00
+
+== 8. Randomised stress (finite + bounded) ==
+[PASS] stress                     8041472 samples, 5 sample rates, non-finite 0, max |x| 7.06
+
+== 9. CPU (stereo, 44.1 kHz, voiced input, Wide range) ==
+[PASS] cpu                        10 s rendered in 0.165 s = 60x realtime (~1.7% of one core)
+[PASS] demo accuracy              median deviation from the intended note: before 33.5 cents, after (hard tune) 4.7 cents
+
+RESULT: 20 passed, 0 failed
